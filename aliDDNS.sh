@@ -53,9 +53,7 @@ aliddns_ttl=$6 #"600"
 
 #--------------------------------------------------------------
 mdate=$(date "+%Y-%m-%d")
-#重要：必须修改此目录
-logPath="/volume2/docker/DNSCheck/DNSCheck$mdate.log"
-#增加调试功能，方便迁移到其它平台
+logPath="/volume2/docker/DNSCheck/log/DNSCheck$mdate.log"
 debug_flag="0"
 #--------------------------------------------------------------
 machine_ip=""
@@ -165,6 +163,7 @@ else
 
     echo "machine_ip = $machine_ip" | tee -a "$logPath"
 
+	
     aliddns_record_id=$aliddnsipv6_record_id
     ddns_ip="$(getDDNS_IPV6)"
 fi
@@ -180,7 +179,7 @@ fi
 if [ "$machine_ip" = "$ddns_ip" ]
 then
     echo "Skipping..............." | tee -a "$logPath"
-    echo "*********************$(date -d today +"%Y-%m-%d %H:%M:%S") END*****************************"  | tee -a "$logPath"
+    echo "*********************$(date -d today +"%Y-%m-%d %H:%M:%S") END  *****************************"  | tee -a "$logPath"
     if [ "$debug_flag" = '0' ]; then exit 1 ; fi
 fi
 
@@ -188,27 +187,17 @@ echo "start update..." | tee -a "$logPath"
 
 timestamp=$(date -u "+%Y-%m-%dT%H%%3A%M%%3A%SZ")
 
-if [ "$aliddns_record_id" = "" ]
-then
 
-    echo "--------DNS Record ID--------"  | tee -a "$logPath"
-            
-    aliddns_record_id=$(query_recordid | get_recordid) 
+echo "--------DNS Record ID--------"  | tee -a "$logPath"
+        
+aliddns_record_id=$(query_recordid | get_recordid) 
 
-    echo "ID:$aliddns_record_id"  | tee -a "$logPath"
-    
-    echo "--------DNS Record ID--------"  | tee -a "$logPath"
-    
-    if [ "$aliddns_iptype" = 'A' ]
-    then
-        aliddnsipv4_record_id=$aliddns_record_id
-    else
-        aliddnsipv6_record_id=$aliddns_record_id
-    fi
-fi
+echo "ID:$aliddns_record_id"  | tee -a "$logPath"
+echo "--------DNS Record ID--------"  | tee -a "$logPath"
+
 
 #add support */%2A and @/%40 record
-if [ "$aliddns_record_id" = "" ]
+if [ "$aliddns_record_id" = "" ] && [ ! "$ddns_ip" = "" ] 
 then
     echo "add record starting"  | tee -a "$logPath"
 
@@ -218,19 +207,17 @@ then
     then
         echo "aliddns_record_id is empty. "  | tee -a "$logPath"
     else
-        if [ "$aliddns_iptype" = 'A' ]
-        then
-            aliddnsipv4_record_id=$aliddns_record_id
-        else
-            aliddnsipv6_record_id=$aliddns_record_id
-        fi
-
         echo "added record $aliddns_record_id "  | tee -a "$logPath"
     fi
-else
+elif [ ! "$aliddns_record_id" = "" ]
+then
     echo "update record starting"  | tee -a "$logPath"
+    
     update_record "$aliddns_record_id"
+    
     echo "updated record $aliddns_record_id "  | tee -a "$logPath"
+else
+	echo "updated record error ! rocoid id: $aliddns_record_id "  | tee -a "$logPath"
 fi
 
 echo "*********************$(date -d today +"%Y-%m-%d %H:%M:%S") END  *****************************"  | tee -a "$logPath"
