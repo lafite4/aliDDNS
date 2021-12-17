@@ -197,7 +197,7 @@ echo "--------DNS Record ID--------"  | tee -a "$logPath"
 
 
 #add support */%2A and @/%40 record
-if [ "$aliddns_record_id" = "" ] && [ ! "$ddns_ip" = "" ] 
+if [ "$aliddns_record_id" = "" ] && [  "$ddns_ip" = "" ] 
 then
     echo "add record starting"  | tee -a "$logPath"
 
